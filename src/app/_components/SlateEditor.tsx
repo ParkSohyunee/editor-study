@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { KeyboardEvent, useState } from "react";
 
 // Import the Slate editor factory.
 import { createEditor } from "slate";
@@ -34,11 +34,18 @@ export default function SlateEditor() {
   // Create a Slate editor object that won't change across renders.
   const [editor] = useState(() => withReact(createEditor()));
 
+  const onKeyDownText = (e: KeyboardEvent) => {
+    if (e.key === "&") {
+      e.preventDefault();
+      editor.insertText("and");
+    }
+  };
+
   // Render the Slate context.
   // Add the editable component inside the context.
   return (
     <Slate editor={editor} initialValue={initialValue}>
-      <Editable />
+      <Editable onKeyDown={onKeyDownText} />
     </Slate>
   );
 }
