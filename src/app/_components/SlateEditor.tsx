@@ -6,7 +6,13 @@ import { KeyboardEvent, useCallback, useState } from "react";
 import { createEditor, Editor, Element, Transforms } from "slate";
 
 // Import the Slate components and React plugin.
-import { Slate, Editable, withReact, RenderElementProps } from "slate-react";
+import {
+  Slate,
+  Editable,
+  withReact,
+  RenderElementProps,
+  RenderLeafProps,
+} from "slate-react";
 
 // TypeScript users only add this code
 import { BaseEditor, Descendant } from "slate";
@@ -14,9 +20,10 @@ import { ReactEditor } from "slate-react";
 
 import CodeElement from "./CodeElement";
 import DefaultElement from "./DefaultElement";
+import Leaf from "./Leaf";
 
 type CustomElement = { type: "paragraph" | "code"; children: CustomText[] };
-type CustomText = { text: string };
+type CustomText = { text: string; bold?: true };
 
 declare module "slate" {
   interface CustomTypes {
@@ -39,20 +46,34 @@ export default function SlateEditor() {
 
   // Adding Event Handlers
   const onKeyDownText = (e: KeyboardEvent) => {
-    if (e.key === "`" && e.ctrlKey) {
-      // Prevent the "`" from being inserted by default.
-      e.preventDefault();
+    if (!e.ctrlKey) {
+      return;
+    }
 
-      const [match] = Editor.nodes(editor, {
-        match: (n: any) => n.type === "code",
-      });
+    // Prevent the "`" from being inserted by default.
+    e.preventDefault();
 
-      // Otherwise, set the currently selected blocks type to "code".
-      Transforms.setNodes(
-        editor,
-        { type: match ? "paragraph" : "code" },
-        { match: (n) => Element.isElement(n) && Editor.isBlock(editor, n) }
-      );
+    switch (e.key) {
+      // When "`" is pressed, keep our existing code block logic.
+      case "`": {
+        const [match] = Editor.nodes(editor, {
+          match: (n: any) => n.type === "code",
+        });
+
+        // Otherwise, set the currently selected blocks type to "code".
+        Transforms.setNodes(
+          editor,
+          { type: match ? "paragraph" : "code" },
+          { match: (n) => Element.isElement(n) && Editor.isBlock(editor, n) }
+        );
+        break;
+      }
+
+      // When "B" is pressed, bold the text in the selection.
+      case "b": {
+        Editor.addMark(editor, "bold", true);
+        break;
+      }
     }
   };
 
@@ -67,11 +88,20 @@ export default function SlateEditor() {
     }
   }, []);
 
+  // Define a leaf rendering function that is memoized with `useCallback`.
+  const renderLeaf = useCallback((props: RenderLeafProps) => {
+    return <Leaf props={props} />;
+  }, []);
+
   // Render the Slate context.
   // Add the editable component inside the context.
   return (
     <Slate editor={editor} initialValue={initialValue}>
-      <Editable renderElement={renderElement} onKeyDown={onKeyDownText} />
+      <Editable
+        renderElement={renderElement}
+        renderLeaf={renderLeaf}
+        onKeyDown={onKeyDownText}
+      />
     </Slate>
   );
 }
