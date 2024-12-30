@@ -3,7 +3,7 @@
 import { KeyboardEvent, useCallback, useState } from "react";
 
 // Import the Slate editor factory.
-import { createEditor, Editor, Element, Transforms } from "slate";
+import { createEditor } from "slate";
 
 // Import the Slate components and React plugin.
 import {
@@ -21,6 +21,8 @@ import { ReactEditor } from "slate-react";
 import CodeElement from "./CodeElement";
 import DefaultElement from "./DefaultElement";
 import Leaf from "./Leaf";
+
+import CustomEditor from "../_models/CustomEditor";
 
 type CustomElement = { type: "paragraph" | "code"; children: CustomText[] };
 type CustomText = { text: string; bold?: true };
@@ -56,22 +58,13 @@ export default function SlateEditor() {
     switch (e.key) {
       // When "`" is pressed, keep our existing code block logic.
       case "`": {
-        const [match] = Editor.nodes(editor, {
-          match: (n: any) => n.type === "code",
-        });
-
-        // Otherwise, set the currently selected blocks type to "code".
-        Transforms.setNodes(
-          editor,
-          { type: match ? "paragraph" : "code" },
-          { match: (n) => Element.isElement(n) && Editor.isBlock(editor, n) }
-        );
+        CustomEditor.toggleCodeBlock(editor);
         break;
       }
 
       // When "B" is pressed, bold the text in the selection.
       case "b": {
-        Editor.addMark(editor, "bold", true);
+        CustomEditor.toggleBoldMark(editor);
         break;
       }
     }
@@ -97,6 +90,25 @@ export default function SlateEditor() {
   // Add the editable component inside the context.
   return (
     <Slate editor={editor} initialValue={initialValue}>
+      <div>
+        <button
+          onMouseDown={(event) => {
+            event.preventDefault();
+            CustomEditor.toggleBoldMark(editor);
+          }}
+        >
+          Bold
+        </button>
+        <button
+          onMouseDown={(event) => {
+            event.preventDefault();
+            CustomEditor.toggleCodeBlock(editor);
+          }}
+        >
+          Code Block
+        </button>
+      </div>
+
       <Editable
         renderElement={renderElement}
         renderLeaf={renderLeaf}
