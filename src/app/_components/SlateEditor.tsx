@@ -1,6 +1,6 @@
 "use client";
 
-import { KeyboardEvent, useCallback, useState } from "react";
+import { KeyboardEvent, useCallback, useMemo, useState } from "react";
 
 // Import the Slate editor factory.
 import { createEditor } from "slate";
@@ -35,7 +35,7 @@ declare module "slate" {
   }
 }
 
-const initialValue: Descendant[] = [
+const defaultInitialValue: Descendant[] = [
   {
     type: "paragraph",
     children: [{ text: "A line of text in a paragraph." }],
@@ -70,6 +70,17 @@ export default function SlateEditor() {
     }
   };
 
+  // Save the value to Local Storage.
+  const handleChangeValue = (value: Descendant[]) => {
+    const isAstChange = editor.operations.some(
+      (op) => "set_selection" !== op.type
+    );
+    if (isAstChange) {
+      const content = JSON.stringify(value);
+      localStorage.setItem("content", content);
+    }
+  };
+
   // Define a rendering function based on the element passed to `props`. We use
   // `useCallback` here to memoize the function for subsequent renders.
   const renderElement = useCallback((props: RenderElementProps) => {
@@ -86,10 +97,22 @@ export default function SlateEditor() {
     return <Leaf props={props} />;
   }, []);
 
+  // Update the initial content to be pulled from Local Storage if it exists.
+  const initialValue: Descendant[] = useMemo(
+    () =>
+      JSON.parse(localStorage.getItem("content") as string) ||
+      defaultInitialValue,
+    []
+  );
+
   // Render the Slate context.
   // Add the editable component inside the context.
   return (
-    <Slate editor={editor} initialValue={initialValue}>
+    <Slate
+      editor={editor}
+      initialValue={initialValue}
+      onChange={handleChangeValue}
+    >
       <div>
         <button
           onMouseDown={(event) => {
