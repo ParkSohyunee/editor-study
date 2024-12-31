@@ -23,7 +23,7 @@ import DefaultElement from "./DefaultElement";
 import Leaf from "./Leaf";
 import HeadingElement from "./HeadingElement";
 
-import CustomEditor from "../_models/CustomEditor";
+import CustomEditor from "../models/CustomEditor";
 import createTableOfContents, {
   CustomHeadingElement,
 } from "../utils/createTableOfContents";
