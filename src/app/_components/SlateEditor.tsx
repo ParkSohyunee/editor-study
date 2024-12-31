@@ -21,11 +21,13 @@ import { ReactEditor } from "slate-react";
 import CodeElement from "./CodeElement";
 import DefaultElement from "./DefaultElement";
 import Leaf from "./Leaf";
+import HeadingElement from "./HeadingElement";
 
 import CustomEditor from "../_models/CustomEditor";
-
-type CustomElement = { type: "paragraph" | "code"; children: CustomText[] };
-type CustomText = { text: string; bold?: true };
+import createTableOfContents, {
+  CustomHeadingElement,
+} from "../utils/createTableOfContents";
+import { CustomElement, CustomText } from "../types/editorTypes";
 
 declare module "slate" {
   interface CustomTypes {
@@ -45,6 +47,7 @@ const defaultInitialValue: Descendant[] = [
 export default function SlateEditor() {
   // Create a Slate editor object that won't change across renders.
   const [editor] = useState(() => withReact(createEditor()));
+  const [toc, setToc] = useState<CustomHeadingElement[]>([]);
 
   // Adding Event Handlers
   const onKeyDownText = (e: KeyboardEvent) => {
@@ -79,12 +82,17 @@ export default function SlateEditor() {
       const content = JSON.stringify(value);
       localStorage.setItem("content", content);
     }
+
+    const tocData = createTableOfContents(value);
+    setToc(tocData);
   };
 
   // Define a rendering function based on the element passed to `props`. We use
   // `useCallback` here to memoize the function for subsequent renders.
   const renderElement = useCallback((props: RenderElementProps) => {
     switch (props.element.type) {
+      case "heading":
+        return <HeadingElement props={props} />;
       case "code":
         return <CodeElement props={props} />;
       default:
@@ -130,6 +138,23 @@ export default function SlateEditor() {
         >
           Code Block
         </button>
+        <button
+          onMouseDown={(event) => {
+            event.preventDefault();
+            CustomEditor.toggleHeadingBlock(editor);
+          }}
+        >
+          Heading
+        </button>
+      </div>
+
+      <div>
+        <h3>Table Of Contents</h3>
+        <ul>
+          {toc.map((el, index) => (
+            <li key={index}>{el.text}</li>
+          ))}
+        </ul>
       </div>
 
       <Editable
