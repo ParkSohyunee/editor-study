@@ -28,6 +28,7 @@ import createTableOfContents, {
   CustomHeadingElement,
 } from "../utils/createTableOfContents";
 import { CustomElement, CustomText } from "../types/editorTypes";
+import Toolbar from "./Toolbar";
 
 declare module "slate" {
   interface CustomTypes {
@@ -121,32 +122,7 @@ export default function SlateEditor() {
       initialValue={initialValue}
       onChange={handleChangeValue}
     >
-      <div>
-        <button
-          onMouseDown={(event) => {
-            event.preventDefault();
-            CustomEditor.toggleBoldMark(editor);
-          }}
-        >
-          Bold
-        </button>
-        <button
-          onMouseDown={(event) => {
-            event.preventDefault();
-            CustomEditor.toggleCodeBlock(editor);
-          }}
-        >
-          Code Block
-        </button>
-        <button
-          onMouseDown={(event) => {
-            event.preventDefault();
-            CustomEditor.toggleHeadingBlock(editor);
-          }}
-        >
-          Heading
-        </button>
-      </div>
+      <Toolbar />
 
       <div>
         <h3>Table Of Contents</h3>
